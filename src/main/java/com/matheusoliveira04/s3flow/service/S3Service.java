@@ -6,6 +6,7 @@ import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.ResponseBytes;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
@@ -25,13 +26,13 @@ public class S3Service {
     }
 
     public void uploadFile(MultipartFile file) throws IOException {
-            s3Client.putObject(
-                    PutObjectRequest.builder()
-                            .bucket(bucketName)
-                            .key(file.getOriginalFilename())
-                            .build(),
-                    RequestBody.fromBytes(file.getBytes())
-            );
+        s3Client.putObject(
+                PutObjectRequest.builder()
+                        .bucket(bucketName)
+                        .key(file.getOriginalFilename())
+                        .build(),
+                RequestBody.fromBytes(file.getBytes())
+        );
     }
 
     public byte[] downloadFile(String key) {
@@ -42,5 +43,13 @@ public class S3Service {
                         .build()
         );
         return objectAsBytes.asByteArray();
+    }
+
+    public void deleteFile(String key) {
+        DeleteObjectRequest build = DeleteObjectRequest.builder()
+                .bucket(bucketName)
+                .key(key)
+                .build();
+        s3Client.deleteObject(build);
     }
 }
