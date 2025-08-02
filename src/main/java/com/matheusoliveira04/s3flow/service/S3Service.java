@@ -8,12 +8,10 @@ import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.ResponseBytes;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
-import software.amazon.awssdk.services.s3.model.GetObjectRequest;
-import software.amazon.awssdk.services.s3.model.GetObjectResponse;
-import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.*;
 
 import java.io.IOException;
+import java.util.List;
 
 @Service
 public class S3Service {
@@ -53,5 +51,16 @@ public class S3Service {
                 .key(key)
                 .build();
         s3Client.deleteObject(build);
+    }
+
+    public List<String> listAll() {
+        ListObjectsV2Request listObjectsV2Request = ListObjectsV2Request
+                .builder()
+                .bucket(bucketName)
+                .build();
+
+        ListObjectsV2Response listObjectsV2Response = s3Client.listObjectsV2(listObjectsV2Request);
+
+        return listObjectsV2Response.contents().stream().map(S3Object::key).toList();
     }
 }
