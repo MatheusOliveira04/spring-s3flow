@@ -1,6 +1,8 @@
 package com.matheusoliveira04.s3flow.service;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.ResponseBytes;
@@ -35,14 +37,14 @@ public class S3Service {
         );
     }
 
-    public byte[] downloadFile(String key) {
+    public Resource downloadFile(String key) {
         ResponseBytes<GetObjectResponse> objectAsBytes = s3Client.getObjectAsBytes(
                 GetObjectRequest.builder()
                         .bucket(bucketName)
                         .key(key)
                         .build()
         );
-        return objectAsBytes.asByteArray();
+        return new ByteArrayResource(objectAsBytes.asByteArray());
     }
 
     public void deleteFile(String key) {
