@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.List;
 
 @RestController
 public class S3Controller {
@@ -37,4 +38,10 @@ public class S3Controller {
         s3Service.deleteFile(filename);
         return ResponseEntity.ok("File deleted successfully. Filename: " + filename);
     }
+
+    @GetMapping("/list")
+    public ResponseEntity<List<String>> listAll() {
+        return ResponseEntity.ok(s3Service.listAll());
+    }
+
 }
