@@ -1,6 +1,7 @@
 package com.matheusoliveira04.s3flow.controller;
 
 import com.matheusoliveira04.s3flow.service.S3Service;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,8 +25,8 @@ public class S3Controller {
     }
 
     @GetMapping("/download/{filename}")
-    public ResponseEntity<byte[]> download(@PathVariable String filename) {
-        byte[] data = s3Service.downloadFile(filename);
+    public ResponseEntity<Resource> download(@PathVariable String filename) {
+        var data = s3Service.downloadFile(filename);
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
                 .body(data);
@@ -36,5 +37,4 @@ public class S3Controller {
         s3Service.deleteFile(filename);
         return ResponseEntity.ok("File deleted successfully. Filename: " + filename);
     }
-
 }
