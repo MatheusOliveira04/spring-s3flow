@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.util.List;
 
 @RestController
+@RequestMapping("/v1/s3bucket")
 public class S3Controller {
 
     private S3Service s3Service;
