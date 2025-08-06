@@ -40,6 +40,10 @@ class S3ServiceTest {
 
     @Captor
     ArgumentCaptor<DeleteObjectRequest> deleteObjectRequestCaptor;
+
+    @Captor
+    ArgumentCaptor<ListObjectsV2Request> listObjectsV2RequestCaptor;
+
     @Nested
     class uploadFile {
 
