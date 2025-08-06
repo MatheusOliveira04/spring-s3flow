@@ -38,6 +38,8 @@ class S3ServiceTest {
     @Captor
     ArgumentCaptor<GetObjectRequest> getObjectRequestCaptor;
 
+    @Captor
+    ArgumentCaptor<DeleteObjectRequest> deleteObjectRequestCaptor;
     @Nested
     class uploadFile {
 
@@ -129,4 +131,92 @@ class S3ServiceTest {
         }
 
     }
+
+    @Nested
+    class deleteFile {
+
+        @Test
+        @DisplayName("should call DeleteObject on S3Client")
+        void shouldCallDeleteObjectOnS3Client() {
+            var fileName = "file.txt";
+
+            s3Service.deleteFile(fileName);
+
+            verify(s3Client, times(1)).deleteObject(any(DeleteObjectRequest.class));
+        }
+
+        @Test
+        @DisplayName("should capture DeleteObject arguments")
+        void shouldCaptureDeleteObjectArguments() {
+            var fileName = "file.txt";
+
+            s3Service.deleteFile(fileName);
+
+            verify(s3Client, times(1)).deleteObject(deleteObjectRequestCaptor.capture());
+
+            var deleteObjectRequestCaptured = deleteObjectRequestCaptor.getValue();
+            assertEquals(fileName, deleteObjectRequestCaptured.key());
+        }
+
+    }
+
+    @Nested
+    class listAll {
+
+        @Test
+        @DisplayName("should return String List with success")
+        void shouldReturnStringListWithSuccess() {
+            List<S3Object> fileNames = List.of(
+                    S3Object.builder().key("file1.txt").build(),
+                    S3Object.builder().key("file2.txt").build()
+            );
+
+            ListObjectsV2Response mockResponse = ListObjectsV2Response.builder().contents(fileNames).build();
+
+            doReturn(mockResponse).when(s3Client).listObjectsV2(any(ListObjectsV2Request.class));
+
+            var output = s3Service.listAll();
+
+            assertNotNull(output);
+            assertEquals(output.size(), fileNames.stream().map(S3Object::key).toList().size());
+            assertArrayEquals(output.toArray(), fileNames.stream().map(S3Object::key).toList().toArray());
+        }
+
+        @Test
+        @DisplayName("should call ListObject on S3Client")
+        void shouldCallListObjectOnS3Client() {
+            List<S3Object> fileNames = List.of(
+                    S3Object.builder().key("file1.txt").build(),
+                    S3Object.builder().key("file2.txt").build()
+            );
+            ListObjectsV2Response mockResponse = ListObjectsV2Response.builder().contents(fileNames).build();
+
+            doReturn(mockResponse).when(s3Client).listObjectsV2(any(ListObjectsV2Request.class));
+
+            s3Service.listAll();
+
+            verify(s3Client, times(1)).listObjectsV2(any(ListObjectsV2Request.class));
+        }
+
+        @Test
+        @DisplayName("should capture ListObject arguments")
+        void shouldCaptureListObjectArguments() {
+            List<S3Object> fileNames = List.of(
+                    S3Object.builder().key("file1.txt").build(),
+                    S3Object.builder().key("file2.txt").build()
+            );
+            ListObjectsV2Response mockResponse = ListObjectsV2Response.builder().contents(fileNames).build();
+
+            doReturn(mockResponse).when(s3Client).listObjectsV2(any(ListObjectsV2Request.class));
+
+            s3Service.listAll();
+
+            verify(s3Client, times(1)).listObjectsV2(listObjectsV2RequestCaptor.capture());
+
+            var listObjectsV2RequestCaptured = listObjectsV2RequestCaptor.getValue();
+            assertNotNull(listObjectsV2RequestCaptured);
+        }
+
+    }
+
 }
