@@ -1,5 +1,6 @@
 package com.matheusoliveira04.s3flow.service;
 
+import com.matheusoliveira04.s3flow.exceptions.FileNotFoundException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
@@ -54,13 +55,31 @@ public class S3Service {
     }
 
     public List<String> listAll() {
-        ListObjectsV2Request listObjectsV2Request = ListObjectsV2Request
-                .builder()
+        ListObjectsV2Request request = buildListRequest(bucketName);
+        ListObjectsV2Response response = executeListRequest(request);
+
+        List<String> fileList = extractKeyFile(response);
+        validateNotEmpty(fileList);
+        return fileList;
+    }
+
+    private ListObjectsV2Request buildListRequest(String bucketName) {
+        return ListObjectsV2Request.builder()
                 .bucket(bucketName)
                 .build();
+    }
 
-        ListObjectsV2Response listObjectsV2Response = s3Client.listObjectsV2(listObjectsV2Request);
+    private ListObjectsV2Response executeListRequest(ListObjectsV2Request request) {
+        return s3Client.listObjectsV2(request);
+    }
 
+    private static List<String> extractKeyFile(ListObjectsV2Response listObjectsV2Response) {
         return listObjectsV2Response.contents().stream().map(S3Object::key).toList();
+    }
+
+    private static void validateNotEmpty(List<String> fileList) {
+        if (fileList.isEmpty()) {
+            throw new FileNotFoundException("File list is empty!");
+        }
     }
 }
