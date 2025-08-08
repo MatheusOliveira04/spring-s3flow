@@ -1,5 +1,6 @@
 package com.matheusoliveira04.s3flow.service;
 
+import com.matheusoliveira04.s3flow.exceptions.FileNotFoundException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -219,6 +220,19 @@ class S3ServiceTest {
 
             var listObjectsV2RequestCaptured = listObjectsV2RequestCaptor.getValue();
             assertNotNull(listObjectsV2RequestCaptured);
+        }
+
+        @Test
+        @DisplayName("should throws FileNotFoundException when list is empty")
+        void shouldThrowsFileNotFoundExceptionWhenListIsEmpty() {
+            var exceptionMessage = "No files found in S3 bucket.";
+            doReturn(ListObjectsV2Response.builder().contents(List.of()).build())
+                    .when(s3Client)
+                    .listObjectsV2(any(ListObjectsV2Request.class));
+
+            var exception = assertThrows(FileNotFoundException.class, () -> s3Service.listAll());
+            assertNotNull(exception);
+            assertEquals(exceptionMessage, exception.getMessage());
         }
 
     }
