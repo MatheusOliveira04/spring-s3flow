@@ -58,9 +58,8 @@ public class S3Service {
         ListObjectsV2Request request = buildListRequest(bucketName);
         ListObjectsV2Response response = executeListRequest(request);
 
-        List<String> fileList = extractKeyFile(response);
-        validateNotEmpty(fileList);
-        return fileList;
+        validateNotEmptyS3FileList(response);
+        return extractKeyFile(response);
     }
 
     private ListObjectsV2Request buildListRequest(String bucketName) {
@@ -77,9 +76,10 @@ public class S3Service {
         return listObjectsV2Response.contents().stream().map(S3Object::key).toList();
     }
 
-    private static void validateNotEmpty(List<String> fileList) {
-        if (fileList.isEmpty()) {
-            throw new FileNotFoundException("File list is empty!");
+    private static void validateNotEmptyS3FileList(ListObjectsV2Response responseObjectList) {
+        List<S3Object> contents = responseObjectList.contents();
+        if (contents == null || contents.isEmpty()) {
+            throw new FileNotFoundException("No files found in S3 bucket.");
         }
     }
 }
