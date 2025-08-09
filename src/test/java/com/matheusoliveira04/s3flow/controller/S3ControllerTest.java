@@ -90,4 +90,57 @@ class S3ControllerTest {
 
     }
 
+    @Nested
+    class download {
+
+        @Test
+        @DisplayName("should return 200 OK, Content Disposition with message after file download")
+        void shouldReturn200OkWithMessageAfterFileDownload() throws IOException {
+            var filename = "fileTesting";
+            byte[] content = "Testing content".getBytes();
+            Resource resource = new ByteArrayResource(content);
+
+            doReturn(resource).when(s3Service).downloadFile(any());
+
+            var response = s3Controller.download(filename);
+
+            assertNotNull(response);
+            assertNotNull(response.getBody());
+            assertArrayEquals(content, response.getBody().getInputStream().readAllBytes());
+            assertEquals(HttpStatus.OK.value(), response.getStatusCode().value());
+            assertEquals("attachment; filename=" + filename, response.getHeaders().getFirst(HttpHeaders.CONTENT_DISPOSITION));
+
+            verify(s3Service, times(1)).downloadFile(eq(filename));
+        }
+
+        @Test
+        @DisplayName("should call DownloadFile on S3Service")
+        void shouldCallDownloadFileOnS3Service() {
+            var filename = "fileTesting";
+            byte[] content = "Testing content".getBytes();
+            Resource resource = new ByteArrayResource(content);
+
+            doReturn(resource).when(s3Service).downloadFile(any());
+
+            s3Controller.download(filename);
+
+            verify(s3Service, times(1)).downloadFile(any());
+        }
+
+        @Test
+        @DisplayName("should capture DownloadFile on S3Service")
+        void shouldCaptureDownloadFileOnS3Service() {
+            var filename = "fileTesting";
+            byte[] content = "Testing content".getBytes();
+            Resource resource = new ByteArrayResource(content);
+
+            doReturn(resource).when(s3Service).downloadFile(stringCaptor.capture());
+
+            s3Controller.download(filename);
+
+            assertEquals(filename, stringCaptor.getValue());
+
+            verify(s3Service, times(1)).downloadFile(eq(filename));
+        }
+    }
 }
