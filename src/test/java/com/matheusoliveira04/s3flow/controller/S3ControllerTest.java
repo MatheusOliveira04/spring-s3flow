@@ -18,6 +18,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -134,8 +135,8 @@ class S3ControllerTest {
         }
 
         @Test
-        @DisplayName("should capture DownloadFile on S3Service")
-        void shouldCaptureDownloadFileOnS3Service() {
+        @DisplayName("should capture DownloadFile arguments on S3Service")
+        void shouldCaptureDownloadFileArgumentsOnS3Service() {
             var filename = "fileTesting";
             byte[] content = "Testing content".getBytes();
             Resource resource = new ByteArrayResource(content);
@@ -176,8 +177,8 @@ class S3ControllerTest {
         }
 
         @Test
-        @DisplayName("should capture DeleteFile on S3Service")
-        void shouldCaptureDeleteFileOnS3Service(){
+        @DisplayName("should capture DeleteFile arguments on S3Service")
+        void shouldCaptureDeleteFileArgumentsOnS3Service(){
             var filename = "fileTest";
             doNothing().when(s3Service).deleteFile(stringCaptor.capture());
 
@@ -186,6 +187,29 @@ class S3ControllerTest {
             assertEquals(filename, stringCaptor.getValue());
 
             verify(s3Service, times(1)).deleteFile(eq(filename));
+        }
+    }
+
+    @Nested
+    class listAll {
+
+        @Test
+        @DisplayName("should return 200 OK and filename list")
+        void shouldReturn200OkAndFilenameList() {
+            var filenames = List.of("fileTesting1", "fileTesting2", "fileTesting3");
+
+            doReturn(filenames).when(s3Service).listAll();
+
+            var response = s3Controller.listAll();
+
+            assertNotNull(response);
+            assertNotNull(response.getBody());
+            assertEquals(filenames, response.getBody());
+            assertEquals(filenames.size(), response.getBody().size());
+            assertArrayEquals(filenames.toArray(), response.getBody().toArray());
+            assertEquals(HttpStatus.OK, response.getStatusCode());
+
+            verify(s3Service, times(1)).listAll();
         }
     }
 }
