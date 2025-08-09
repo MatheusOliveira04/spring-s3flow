@@ -100,8 +100,8 @@ class S3ControllerTest {
     class download {
 
         @Test
-        @DisplayName("should return 200 OK, Content Disposition with message after file download")
-        void shouldReturn200OkWithMessageAfterFileDownload() throws IOException {
+        @DisplayName("should return 200 OK and Content Disposition after file download")
+        void shouldReturn200OkAndContentDispositionAfterFileDownload() throws IOException {
             var filename = "fileTesting";
             byte[] content = "Testing content".getBytes();
             Resource resource = new ByteArrayResource(content);
@@ -147,6 +147,45 @@ class S3ControllerTest {
             assertEquals(filename, stringCaptor.getValue());
 
             verify(s3Service, times(1)).downloadFile(eq(filename));
+        }
+    }
+
+    @Nested
+    class delete {
+
+        @Test
+        @DisplayName("should return 200 OK with message after file delete")
+        void shouldReturn200OkWithMessageAfterFileDelete() {
+            var filename = "fileTest";
+            var expectedMessageResponse = "File deleted successfully. Filename: " + filename;
+
+            var response = s3Controller.delete(filename);
+
+            assertEquals(expectedMessageResponse, response.getBody());
+            verify(s3Service, times(1)).deleteFile(any());
+        }
+
+        @Test
+        @DisplayName("should call DeleteFile on S3Service")
+        void shouldCallDeleteFileOnS3Service(){
+            var filename = "fileTest";
+
+            s3Controller.delete(filename);
+
+            verify(s3Service, times(1)).deleteFile(filename);
+        }
+
+        @Test
+        @DisplayName("should capture DeleteFile on S3Service")
+        void shouldCaptureDeleteFileOnS3Service(){
+            var filename = "fileTest";
+            doNothing().when(s3Service).deleteFile(stringCaptor.capture());
+
+            s3Controller.delete(filename);
+
+            assertEquals(filename, stringCaptor.getValue());
+
+            verify(s3Service, times(1)).deleteFile(eq(filename));
         }
     }
 }
