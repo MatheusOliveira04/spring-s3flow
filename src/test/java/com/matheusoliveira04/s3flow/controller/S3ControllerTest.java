@@ -60,11 +60,23 @@ class S3ControllerTest {
             MultipartFile file = new MockMultipartFile("file", "file.txt",
                     "text/plain", content);
 
-            doNothing().when(s3Service).uploadFile(fileCaptor.capture());
+            doNothing().when(s3Service).uploadFile(any());
 
             s3Controller.upload(file);
 
-            verify(s3Service, times(1)).uploadFile(file);
+            verify(s3Service, times(1)).uploadFile(any());
+        }
+
+        @Test
+        @DisplayName("should capture UploadFile arguments on S3Service")
+        void shouldCaptureUploadFileArgumentsOnS3Service() throws IOException {
+            byte[] content = "Testing content".getBytes();
+            MultipartFile file = new MockMultipartFile("file", "file.txt",
+                    "text/plain", content);
+
+            doNothing().when(s3Service).uploadFile(fileCaptor.capture());
+
+            s3Controller.upload(file);
 
             var fileCaptured = fileCaptor.getValue();
             assertNotNull(fileCaptured);
@@ -72,6 +84,8 @@ class S3ControllerTest {
             assertEquals(file.getOriginalFilename(), fileCaptured.getOriginalFilename());
             assertEquals(file.getContentType(), fileCaptured.getContentType());
             assertEquals(file.getBytes(), fileCaptured.getBytes());
+
+            verify(s3Service, times(1)).uploadFile(file);
         }
 
     }
