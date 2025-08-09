@@ -10,6 +10,9 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
@@ -31,13 +34,16 @@ class S3ControllerTest {
     @Captor
     ArgumentCaptor<MultipartFile> fileCaptor;
 
+    @Captor
+    ArgumentCaptor<String> stringCaptor;
+
     @Nested
     class upload {
 
         @Test
         @DisplayName("should return 200 OK with success message after file upload")
         void shouldReturn200OkWithMessageAfterFileUpload() throws IOException {
-            var successMessage = "File uploaded successfully";
+            var expectedSuccessMessage = "File uploaded successfully";
 
             byte[] content = "Testing content".getBytes();
             MultipartFile file = new MockMultipartFile("file", "file.txt",
@@ -47,7 +53,7 @@ class S3ControllerTest {
 
             assertNotNull(response);
             assertNotNull(response.getBody());
-            assertEquals(successMessage, response.getBody());
+            assertEquals(expectedSuccessMessage, response.getBody());
             assertEquals(HttpStatus.OK.value(), response.getStatusCode().value());
 
             verify(s3Service, times(1)).uploadFile(any());
@@ -90,4 +96,57 @@ class S3ControllerTest {
 
     }
 
+    @Nested
+    class download {
+
+        @Test
+        @DisplayName("should return 200 OK, Content Disposition with message after file download")
+        void shouldReturn200OkWithMessageAfterFileDownload() throws IOException {
+            var filename = "fileTesting";
+            byte[] content = "Testing content".getBytes();
+            Resource resource = new ByteArrayResource(content);
+
+            doReturn(resource).when(s3Service).downloadFile(any());
+
+            var response = s3Controller.download(filename);
+
+            assertNotNull(response);
+            assertNotNull(response.getBody());
+            assertArrayEquals(content, response.getBody().getInputStream().readAllBytes());
+            assertEquals(HttpStatus.OK.value(), response.getStatusCode().value());
+            assertEquals("attachment; filename=" + filename, response.getHeaders().getFirst(HttpHeaders.CONTENT_DISPOSITION));
+
+            verify(s3Service, times(1)).downloadFile(eq(filename));
+        }
+
+        @Test
+        @DisplayName("should call DownloadFile on S3Service")
+        void shouldCallDownloadFileOnS3Service() {
+            var filename = "fileTesting";
+            byte[] content = "Testing content".getBytes();
+            Resource resource = new ByteArrayResource(content);
+
+            doReturn(resource).when(s3Service).downloadFile(any());
+
+            s3Controller.download(filename);
+
+            verify(s3Service, times(1)).downloadFile(any());
+        }
+
+        @Test
+        @DisplayName("should capture DownloadFile on S3Service")
+        void shouldCaptureDownloadFileOnS3Service() {
+            var filename = "fileTesting";
+            byte[] content = "Testing content".getBytes();
+            Resource resource = new ByteArrayResource(content);
+
+            doReturn(resource).when(s3Service).downloadFile(stringCaptor.capture());
+
+            s3Controller.download(filename);
+
+            assertEquals(filename, stringCaptor.getValue());
+
+            verify(s3Service, times(1)).downloadFile(eq(filename));
+        }
+    }
 }
